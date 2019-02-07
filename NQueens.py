@@ -1,4 +1,7 @@
 import random
+import time
+
+# import time to show speed of algorithm
 
 # this will need to be converted to a file reader
 # the assignment describes a text file with different n sizes
