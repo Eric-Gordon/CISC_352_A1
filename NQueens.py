@@ -36,18 +36,19 @@ def place_queens(size):
     return board
 
 
-def get_negative_diagonals(board, specific_difference=False):
-    total, attack = [], []
+def get_negative_diagonals(play_board, specific_difference=False):
+    board = play_board[:]
+    total, array = [], []
     if specific_difference is False:
         for difference in range((len(board)-1), (((len(board)-1)) * -1), -1):
             queens = list(
                 filter(lambda row: ((row - board[row]) == difference), board))
             if len(queens) > 1:
                 for row in queens:
-                    if row not in attack:
-                        attack.append(row)
+                    if row not in array:
+                        array.append(row)
             total.append(len(queens))
-        return [total, attack]
+        return [total, array]
     else:
         queens = list(
             filter(lambda row: ((row - board[row]) == specific_difference), board))
@@ -55,18 +56,19 @@ def get_negative_diagonals(board, specific_difference=False):
         return total
 
 
-def get_positive_diagonals(board, specific_sum=False):
-    total, attack = [], []
+def get_positive_diagonals(play_board, specific_sum=False):
+    board = play_board[:]
+    total, array = [], []
     if specific_sum is False:
         for summation in range(1, (((len(board))-1)+((len(board)-1)))):
             queens = list(
                 filter(lambda row: ((row + board[row]) == summation), board))
             if len(queens) > 1:
                 for row in queens:
-                    if row not in attack:
-                        attack.append(row)
+                    if row not in array:
+                        array.append(row)
             total.append(len(queens))
-        return [total, attack]
+        return [total, array]
     else:
         queens = list(
             filter(lambda row: ((row + board[row]) == specific_sum), board))
@@ -86,14 +88,14 @@ def compute_collisions(negative_diagonals, positive_diagonals):
 
 
 def compute_attacks(negative_diagonals, positive_diagonals):
-    attack = []
+    array = []
     for row in negative_diagonals:
-        if row not in attack:
-            attack.append(row)
+        if row not in array:
+            array.append(row)
     for row in positive_diagonals:
-        if row not in attack:
-            attack.append(row)
-    return attack
+        if row not in array:
+            array.append(row)
+    return array
 
 
 def swap_ok(i, j, play_board):
@@ -163,34 +165,41 @@ def perform_swap(i, j, play_board):
 
 
 def solve(size):
-    board = place_queens(size)
-    negative_diagonals = get_negative_diagonals(board)
-    positive_diagonals = get_positive_diagonals(board)
-    collisions = compute_collisions(
-        negative_diagonals[0], positive_diagonals[0])
-    attack = compute_attacks(negative_diagonals[1], positive_diagonals[1])
+    collisions = -1
+    while collisions != 0:
+        board = place_queens(size)
+        negative_diagonals = get_negative_diagonals(board)
+        positive_diagonals = get_positive_diagonals(board)
+        collisions = compute_collisions(
+            negative_diagonals[0], positive_diagonals[0])
+        attack = compute_attacks(negative_diagonals[1], positive_diagonals[1])
 
-    number_of_attacks = len(attack)
-    limit = 0.5 * collisions
+        number_of_attacks = len(attack)
+        limit = 0.42 * collisions
 
-    loop = 0
-    while loop < (32 * size):
-        for k in range(number_of_attacks):
-            i = attack[k]
-            j = random.randint(0, size-1)
-            if swap_ok(i, j, board):
-                board = perform_swap(i, j, board)
-                negative_diagonals = get_negative_diagonals(board)
-                positive_diagonals = get_positive_diagonals(board)
-                collisions = compute_collisions(
-                    negative_diagonals[0], positive_diagonals[0])
-                if collisions == 0:
-                    loop += (50 * size)
-                if collisions < limit:
-                    limit = 0.5 * collisions
-        loop += loop + number_of_attacks
-
-    print("FINAL: collisions = {} -- number_of_attacks = {}".format(collisions, number_of_attacks))
+        loop = 0
+        while loop < (32 * size):
+            k = 0
+            while k < number_of_attacks:
+                i = attack[k]
+                j = random.randint(0, size-1)
+                while j != i:
+                    j = random.randint(0, size-1)
+                if swap_ok(i, j, board):
+                    board = perform_swap(i, j, board)
+                    negative_diagonals = get_negative_diagonals(board)
+                    positive_diagonals = get_positive_diagonals(board)
+                    collisions = compute_collisions(
+                        negative_diagonals[0], positive_diagonals[0])
+                    if collisions == 0:
+                        break
+                    if collisions < limit:
+                        limit = 0.42 * collisions
+                        attack = compute_attacks(
+                            negative_diagonals[1], positive_diagonals[1])
+                        number_of_attacks = len(attack)
+                k += 1
+            loop += loop + number_of_attacks
     return board
 
 
@@ -199,39 +208,11 @@ def solve(size):
 # of the column location for each queen in a row
 
 
-def print_solution(board, size):
-    for row in board:
-        print(row)
-    print()
-    # print("[", end=" ")
-    # for row in range(size-1):
-    #     print(board[row].index(1), end=" ")
-    # print(board[size-1].index(1), end=" ]\n")
-
-
 # take user input for n queens
 size = take_input()
 print("****")
 
-solved = solve(size)
-
-print_solution(solved, size)
-
-# start_time = time.time()
-# solution = False
-# while not solution:
-#     solution = check_solution(random_board, size)
-
-#     solution_board = solve(random_board, 7, size)
-
-#     solution = solution_board[0]
-
-#     # generate the board
-#     board = [x[:] for x in [[0] * size] * size]
-
-#     # place all of the queens on the board
-#     random_board = place_queens(board, size)
-
-# print("SOLUTION FOUND IN {}".format(time.time()-start_time))
-# # print the board
-# print_solution(solution_board[1], size)
+start = time.time()
+solution = solve(size)
+print("Solution in: {}".format(time.time()-start))
+print(solution)
