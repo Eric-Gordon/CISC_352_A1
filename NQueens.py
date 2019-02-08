@@ -36,18 +36,19 @@ def place_queens(size):
     return board
 
 
-def get_negative_diagonals(board, specific_difference=False):
-    total, attack = [], []
+def get_negative_diagonals(play_board, specific_difference=False):
+    total, array = [], []
+    board = play_board[:]
     if specific_difference is False:
         for difference in range((len(board)-1), (((len(board)-1)) * -1), -1):
             queens = list(
                 filter(lambda row: ((row - board[row]) == difference), board))
             if len(queens) > 1:
                 for row in queens:
-                    if row not in attack:
-                        attack.append(row)
+                    if row not in array:
+                        array.append(row)
             total.append(len(queens))
-        return [total, attack]
+        return [total, array]
     else:
         queens = list(
             filter(lambda row: ((row - board[row]) == specific_difference), board))
@@ -55,18 +56,19 @@ def get_negative_diagonals(board, specific_difference=False):
         return total
 
 
-def get_positive_diagonals(board, specific_sum=False):
-    total, attack = [], []
+def get_positive_diagonals(play_board, specific_sum=False):
+    total, array = [], []
+    board = play_board[:]
     if specific_sum is False:
         for summation in range(1, (((len(board))-1)+((len(board)-1)))):
             queens = list(
                 filter(lambda row: ((row + board[row]) == summation), board))
             if len(queens) > 1:
                 for row in queens:
-                    if row not in attack:
-                        attack.append(row)
+                    if row not in array:
+                        array.append(row)
             total.append(len(queens))
-        return [total, attack]
+        return [total, array]
     else:
         queens = list(
             filter(lambda row: ((row + board[row]) == specific_sum), board))
@@ -74,8 +76,9 @@ def get_positive_diagonals(board, specific_sum=False):
         return total
 
 
-def compute_collisions(negative_diagonals, positive_diagonals):
+def compute_collisions(nd, pd):
     total = 0
+    negative_diagonals, positive_diagonals = nd[:], pd[:]
     for diagonal in negative_diagonals:
         if diagonal > 1:
             total += diagonal - 1
@@ -85,15 +88,16 @@ def compute_collisions(negative_diagonals, positive_diagonals):
     return total
 
 
-def compute_attacks(negative_diagonals, positive_diagonals):
-    attack = []
+def compute_attacks(nd, pd):
+    array = []
+    negative_diagonals, positive_diagonals = nd[:], pd[:]
     for row in negative_diagonals:
-        if row not in attack:
-            attack.append(row)
+        if row not in array:
+            array.append(row)
     for row in positive_diagonals:
-        if row not in attack:
-            attack.append(row)
-    return attack
+        if row not in array:
+            array.append(row)
+    return array
 
 
 def swap_ok(i, j, play_board):
