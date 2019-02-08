@@ -21,168 +21,127 @@ def take_input():
         except ValueError:
             print("Invalid value entered. Enter again")
 
-# this creates an n x n board with 0's
+
+def vertical_conflict(board, col):
+    return (any(point == col for point in board))
 
 
-def get_board(size):
-    """Returns an n by n board"""
-    board = [0]*size
-    for ix in range(size):
-        board[ix] = [0]*size
-    return board
-
-# helper function for randomly placing queens on a safe row
-# this makes sure the row doesn't contain another queen
-
-
-def safe_horizontal(board, row, col, size):
-    if(1 in board[row]):
-        return False
-    else:
-        return True
-
-# this functions loops through all of the columns of the board
-# and places a queen on a random row, it checks that the row
-# doesn't already contain a queen
-
-
-def place_queens(board, size):
-    for col in range(size):
-        new_queen = random.randint(0, size-1)
-        while not (safe_horizontal(board, new_queen, col, size)):
-            new_queen = random.randint(0, size-1)
-        board[new_queen][col] = 1
-
-    return board
-
-# counts conflicts to the left of the point given
-
-
-def left_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + left_of(board, row, col-1, size)
-        else:
-            return left_of(board, row, col-1, size)
-
-# counts conflicts to the right of the point given
-
-
-def right_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + right_of(board, row, col+1, size)
-        else:
-            return right_of(board, row, col+1, size)
-
-
-def right_diagonal_up_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + right_diagonal_up_of(board, row-1, col+1, size)
-        else:
-            return right_diagonal_up_of(board, row-1, col+1, size)
-
-
-def right_diagonal_down_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + right_diagonal_down_of(board, row+1, col+1, size)
-        else:
-            return right_diagonal_down_of(board, row+1, col+1, size)
-
-
-def left_diagonal_up_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + left_diagonal_up_of(board, row-1, col-1, size)
-        else:
-            return left_diagonal_up_of(board, row-1, col-1, size)
-
-
-def left_diagonal_down_of(board, row, col, size):
-    if row < 0 or row >= size or col < 0 or col >= size:
-        return 0
-    else:
-        if board[row][col] == 1:
-            return 1 + left_diagonal_down_of(board, row+1, col-1, size)
-        else:
-            return left_diagonal_down_of(board, row+1, col-1, size)
-
-# main function to calculate all of the conflicts for a particular point
-
-
-def conflicts(board, row, col, size):
-    """Check if it's safe to place a queen at board[x][y]"""
-    if(row < 0 or row >= size or col < 0 or col >= size):
-        return 0
-    else:
-        return left_of(board, row, col-1, size) + right_of(board, row, col+1, size) + right_diagonal_up_of(board, row-1, col+1, size) + right_diagonal_down_of(board, row+1, col+1, size) + left_diagonal_up_of(board, row-1, col-1, size) + left_diagonal_down_of(board, row+1, col-1, size)
-
-
-def min_conflict(board, col, size):
-    conflict_array = []
-    min_val, min_row, min_col = 10000, 0, col
-    current_row = 0
+def place_queens(size):
+    board = []
     for row in range(size):
-        conflict_num = conflicts(board, row, col, size)
-        conflict_array.append(conflict_num)
-        if conflict_num < min_val:
-            min_val = conflict_num
-            min_row = row
-        if board[row][col] == 1:
-            current_row = row
-    return [min_row, min_col, current_row, min_val]
+        col = random.randint(0, size-1)
+        while vertical_conflict(board, col):
+            col = random.randint(0, size-1)
+        board.append(col)
+    return board
 
 
-def check_solution(board, size):
-    solution = True
-    row = 0
-    while solution and row < size-1:
-        if 1 not in board[row]:
-            solution = False
-        else:
-            if(conflicts(board, row, board[row].index(1), size) != 0):
-                solution = False
-        row += 1
-    return solution
+def count_negative_diagonals(board):
+    total = 0
+    for difference in range((len(board)-1), (((len(board)-1)) * -1), -1):
+        total += len(list(filter(lambda row: ((row -
+                                               board[row]) == difference), board)))
+    return total
 
 
-# somewhat of a solver function, this will need some work
+def count_positive_diagonals(board):
+    total = 0
+    for sum in range(1, (((len(board))-1)+((len(board)-1)))):
+        total += len(list(filter(lambda row: ((row +
+                                               board[row]) == sum), board)))
+    return total
 
 
-def solve(board, max_steps, size):
-    solution = False
-    col = random.randint(0, size-1)
-    steps = 0
-    while not solution and steps < max_steps:
-        min_row = min_conflict(board, col, size)
-        if(min_row[0] != min_row[2]):
-            if 1 in board[min_row[0]]:
-                col = board[min_row[0]].index(1)
-            else:
-                col = random.randint(0, size-1)
-            board[min_row[0]][min_row[1]] = 1
-            board[min_row[2]][min_row[1]] = 0
-            if min_row[3] == 0:
-                solution = check_solution(board, size)
-        else:
-            if 1 in board[min_row[0]]:
-                col = board[min_row[0]].index(1)
-            else:
-                col = random.randint(0, size-1)
-        steps += 1
-    return [solution, board]
+def swap_ok(i, j, board):
+    i_old_difference = i - board[i]
+    i_old_sum = i + board[i]
+    j_old_difference = j - board[j]
+    j_old_sum = j + board[j]
+    total_old = 0
+    total_old += len(list(filter(lambda x: ((x +
+                                             board[x]) == i_old_sum), board)))
+    total_old += len(list(filter(lambda x: ((x +
+                                             board[x]) == j_old_sum), board)))
+    total_old += len(list(filter(lambda x: ((x -
+                                             board[x]) == i_old_difference), board)))
+    total_old += len(list(filter(lambda x: ((x -
+                                             board[x]) == j_old_difference), board)))
+
+    temp = board[i]
+    board[i] = board[j]
+    board[j] = temp
+    i_new_difference = i - board[i]
+    i_new_sum = i + board[i]
+    j_new_difference = j - board[j]
+    j_new_sum = j + board[j]
+    total_new = 0
+    total_new += len(list(filter(lambda x: ((x +
+                                             board[x]) == i_new_sum), board)))
+    total_new += len(list(filter(lambda x: ((x +
+                                             board[x]) == j_new_sum), board)))
+    total_new += len(list(filter(lambda x: ((x -
+                                             board[x]) == i_new_difference), board)))
+    total_new += len(list(filter(lambda x: ((x -
+                                             board[x]) == j_new_difference), board)))
+
+    print("TOTAL OLD = {} --- TOTAL NEW = {}".format(total_old, total_new))
+    if total_new < total_old:
+        return True
+    else:
+        return False
+
+
+def perform_swap(i, j, board):
+    temp = board[i]
+    board[i] = board[j]
+    board[j] = temp
+    return board
+
+
+def get_attacks(negative_diagonals, positive_diagonals):
+    merged = []
+    for queen in negative_diagonals:
+        if queen not in merged:
+            merged.append(queen)
+    for queen in positive_diagonals:
+        if queen not in merged:
+            merged.append(queen)
+    return merged
+
+
+def solve(size):
+    board = place_queens(size)
+    negative_diagonals = count_negative_diagonals(board)
+    positive_diagonals = count_positive_diagonals(board)
+    collisions = negative_diagonals + positive_diagonals
+    attack = get_attacks(negative_diagonals, positive_diagonals)
+    number_of_attacks = len(attack)
+    limit = 0.5 * collisions
+
+    loop = 0
+    while loop < (32 * size):
+        for k in range(number_of_attacks):
+            i = attack[k]
+            j = random.randint(0, size-1)
+            if swap_ok(i, j, board):
+                board = perform_swap(i, j, board)
+                negative_diagonals = count_negative_diagonals(board)
+                positive_diagonals = count_positive_diagonals(board)
+                collisions = (len(negative_diagonals) - 1) + \
+                    (len(positive_diagonals) - 1)
+                if collisions == 0:
+                    break
+                if collisions < limit:
+                    limit = 0.5 * collisions
+                    attack = get_attacks(
+                        negative_diagonals, positive_diagonals)
+                    number_of_attacks = len(attack)
+            loop += loop + number_of_attacks
+    if collisions != 0:
+        print_solution(board, size)
+        solve(size)
+    else:
+        return board
 
 
 # this currently prints the board visually to see all of the queens
@@ -191,38 +150,38 @@ def solve(board, max_steps, size):
 
 
 def print_solution(board, size):
-    # for row in board:
-    #     print(row)
-    # print()
-    print("[", end=" ")
-    for row in range(size-1):
-        print(board[row].index(1), end=" ")
-    print(board[size-1].index(1), end=" ]\n")
+    for row in board:
+        print(row)
+    print()
+    # print("[", end=" ")
+    # for row in range(size-1):
+    #     print(board[row].index(1), end=" ")
+    # print(board[size-1].index(1), end=" ]\n")
 
 
 # take user input for n queens
 size = take_input()
-# generate the board
-board = [x[:] for x in [[0] * size] * size]
+print("****")
 
-# place all of the queens on the board
-random_board = place_queens(board, size)
+solved = solve(size)
 
-start_time = time.time()
-solution = False
-while not solution:
-    solution = check_solution(random_board, size)
+print_solution(solved, size)
 
-    solution_board = solve(random_board, 7, size)
+# start_time = time.time()
+# solution = False
+# while not solution:
+#     solution = check_solution(random_board, size)
 
-    solution = solution_board[0]
+#     solution_board = solve(random_board, 7, size)
 
-    # generate the board
-    board = [x[:] for x in [[0] * size] * size]
+#     solution = solution_board[0]
 
-    # place all of the queens on the board
-    random_board = place_queens(board, size)
+#     # generate the board
+#     board = [x[:] for x in [[0] * size] * size]
 
-print("SOLUTION FOUND IN {}".format(time.time()-start_time))
-# print the board
-print_solution(solution_board[1], size)
+#     # place all of the queens on the board
+#     random_board = place_queens(board, size)
+
+# print("SOLUTION FOUND IN {}".format(time.time()-start_time))
+# # print the board
+# print_solution(solution_board[1], size)
