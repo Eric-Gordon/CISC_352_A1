@@ -36,85 +36,140 @@ def place_queens(size):
     return board
 
 
-def count_negative_diagonals(board):
+def get_negative_diagonals(board, specific_difference=False):
+    total, attack = [], []
+    if specific_difference is False:
+        for difference in range((len(board)-1), (((len(board)-1)) * -1), -1):
+            queens = list(
+                filter(lambda row: ((row - board[row]) == difference), board))
+            if len(queens) > 1:
+                for row in queens:
+                    if row not in attack:
+                        attack.append(row)
+            total.append(len(queens))
+        return [total, attack]
+    else:
+        queens = list(
+            filter(lambda row: ((row - board[row]) == specific_difference), board))
+        total.append(len(queens))
+        return total
+
+
+def get_positive_diagonals(board, specific_sum=False):
+    total, attack = [], []
+    if specific_sum is False:
+        for summation in range(1, (((len(board))-1)+((len(board)-1)))):
+            queens = list(
+                filter(lambda row: ((row + board[row]) == summation), board))
+            if len(queens) > 1:
+                for row in queens:
+                    if row not in attack:
+                        attack.append(row)
+            total.append(len(queens))
+        return [total, attack]
+    else:
+        queens = list(
+            filter(lambda row: ((row + board[row]) == specific_sum), board))
+        total.append(len(queens))
+        return total
+
+
+def compute_collisions(negative_diagonals, positive_diagonals):
     total = 0
-    for difference in range((len(board)-1), (((len(board)-1)) * -1), -1):
-        total += len(list(filter(lambda row: ((row -
-                                               board[row]) == difference), board)))
+    for diagonal in negative_diagonals:
+        if diagonal > 1:
+            total += diagonal - 1
+    for diagonal in positive_diagonals:
+        if diagonal > 1:
+            total += diagonal - 1
     return total
 
 
-def count_positive_diagonals(board):
-    total = 0
-    for sum in range(1, (((len(board))-1)+((len(board)-1)))):
-        total += len(list(filter(lambda row: ((row +
-                                               board[row]) == sum), board)))
-    return total
+def compute_attacks(negative_diagonals, positive_diagonals):
+    attack = []
+    for row in negative_diagonals:
+        if row not in attack:
+            attack.append(row)
+    for row in positive_diagonals:
+        if row not in attack:
+            attack.append(row)
+    return attack
 
 
-def swap_ok(i, j, board):
+def swap_ok(i, j, play_board):
+    board = play_board[:]
+    # setup old differences and sums
     i_old_difference = i - board[i]
     i_old_sum = i + board[i]
     j_old_difference = j - board[j]
     j_old_sum = j + board[j]
+    # get old conflicts
     total_old = 0
-    total_old += len(list(filter(lambda x: ((x +
-                                             board[x]) == i_old_sum), board)))
-    total_old += len(list(filter(lambda x: ((x +
-                                             board[x]) == j_old_sum), board)))
-    total_old += len(list(filter(lambda x: ((x -
-                                             board[x]) == i_old_difference), board)))
-    total_old += len(list(filter(lambda x: ((x -
-                                             board[x]) == j_old_difference), board)))
 
-    temp = board[i]
-    board[i] = board[j]
-    board[j] = temp
+    # old i diagonals
+    i_old_negative_diagonal = get_negative_diagonals(board, i_old_difference)
+    i_old_positive_diagonal = get_positive_diagonals(board, i_old_sum)
+    # calculate i old collisions
+    i_old_collisions = compute_collisions(
+        i_old_negative_diagonal, i_old_positive_diagonal)
+
+    # old j diagonals
+    j_old_negative_diagonal = get_negative_diagonals(board, j_old_difference)
+    j_old_positive_diagonal = get_positive_diagonals(board, j_old_sum)
+    # calculate j old collisions
+    j_old_collisions = compute_collisions(
+        j_old_negative_diagonal, j_old_positive_diagonal)
+
+    # total the collisions
+    total_old += i_old_collisions + j_old_collisions
+
+    # swap!
+    board[i], board[j] = board[j], board[i]
+
+    # setup new differences and sums
     i_new_difference = i - board[i]
     i_new_sum = i + board[i]
     j_new_difference = j - board[j]
     j_new_sum = j + board[j]
+    # get new conflicts
     total_new = 0
-    total_new += len(list(filter(lambda x: ((x +
-                                             board[x]) == i_new_sum), board)))
-    total_new += len(list(filter(lambda x: ((x +
-                                             board[x]) == j_new_sum), board)))
-    total_new += len(list(filter(lambda x: ((x -
-                                             board[x]) == i_new_difference), board)))
-    total_new += len(list(filter(lambda x: ((x -
-                                             board[x]) == j_new_difference), board)))
 
-    print("TOTAL OLD = {} --- TOTAL NEW = {}".format(total_old, total_new))
+    # new i diagonals
+    i_new_negative_diagonal = get_negative_diagonals(board, i_new_difference)
+    i_new_positive_diagonal = get_positive_diagonals(board, i_new_sum)
+    # calculate i new collisions
+    i_new_collisions = compute_collisions(
+        i_new_negative_diagonal, i_new_positive_diagonal)
+
+    # old j diagonals
+    j_new_negative_diagonal = get_negative_diagonals(board, j_new_difference)
+    j_new_positive_diagonal = get_positive_diagonals(board, j_new_sum)
+    # calculate j old collisions
+    j_new_collisions = compute_collisions(
+        j_new_negative_diagonal, j_new_positive_diagonal)
+
+    # total the collisions
+    total_new += i_new_collisions + j_new_collisions
     if total_new < total_old:
         return True
     else:
         return False
 
 
-def perform_swap(i, j, board):
-    temp = board[i]
-    board[i] = board[j]
-    board[j] = temp
+def perform_swap(i, j, play_board):
+    board = play_board[:]
+    board[i], board[j] = board[j], board[i]
     return board
-
-
-def get_attacks(negative_diagonals, positive_diagonals):
-    merged = []
-    for queen in negative_diagonals:
-        if queen not in merged:
-            merged.append(queen)
-    for queen in positive_diagonals:
-        if queen not in merged:
-            merged.append(queen)
-    return merged
 
 
 def solve(size):
     board = place_queens(size)
-    negative_diagonals = count_negative_diagonals(board)
-    positive_diagonals = count_positive_diagonals(board)
-    collisions = negative_diagonals + positive_diagonals
-    attack = get_attacks(negative_diagonals, positive_diagonals)
+    negative_diagonals = get_negative_diagonals(board)
+    positive_diagonals = get_positive_diagonals(board)
+    collisions = compute_collisions(
+        negative_diagonals[0], positive_diagonals[0])
+    attack = compute_attacks(negative_diagonals[1], positive_diagonals[1])
+
     number_of_attacks = len(attack)
     limit = 0.5 * collisions
 
@@ -125,23 +180,18 @@ def solve(size):
             j = random.randint(0, size-1)
             if swap_ok(i, j, board):
                 board = perform_swap(i, j, board)
-                negative_diagonals = count_negative_diagonals(board)
-                positive_diagonals = count_positive_diagonals(board)
-                collisions = (len(negative_diagonals) - 1) + \
-                    (len(positive_diagonals) - 1)
+                negative_diagonals = get_negative_diagonals(board)
+                positive_diagonals = get_positive_diagonals(board)
+                collisions = compute_collisions(
+                    negative_diagonals[0], positive_diagonals[0])
                 if collisions == 0:
-                    break
+                    loop += (50 * size)
                 if collisions < limit:
                     limit = 0.5 * collisions
-                    attack = get_attacks(
-                        negative_diagonals, positive_diagonals)
-                    number_of_attacks = len(attack)
-            loop += loop + number_of_attacks
-    if collisions != 0:
-        print_solution(board, size)
-        solve(size)
-    else:
-        return board
+        loop += loop + number_of_attacks
+
+    print("FINAL: collisions = {} -- number_of_attacks = {}".format(collisions, number_of_attacks))
+    return board
 
 
 # this currently prints the board visually to see all of the queens
