@@ -133,7 +133,6 @@ def conflicts(board, row, col, size):
 def min_conflict(board, col, size):
     conflict_array = []
     min_val, min_row, min_col = 10000, 0, col
-    max_val, max_row = 0, 0
     current_row = 0
     for row in range(size):
         conflict_num = conflicts(board, row, col, size)
@@ -141,12 +140,9 @@ def min_conflict(board, col, size):
         if conflict_num < min_val:
             min_val = conflict_num
             min_row = row
-        if conflict_num > max_val:
-            max_val = conflict_num
-            max_row = row
         if board[row][col] == 1:
             current_row = row
-    return [min_row, min_col, current_row, min_val, max_row]
+    return [min_row, min_col, current_row, min_val]
 
 
 def check_solution(board, size):
@@ -180,6 +176,11 @@ def solve(board, max_steps, size):
             board[min_row[2]][min_row[1]] = 0
             if min_row[3] == 0:
                 solution = check_solution(board, size)
+        else:
+            if 1 in board[min_row[0]]:
+                col = board[min_row[0]].index(1)
+            else:
+                col = random.randint(0, size-1)
         steps += 1
     return [solution, board]
 
@@ -212,7 +213,7 @@ solution = False
 while not solution:
     solution = check_solution(random_board, size)
 
-    solution_board = solve(random_board, 12, size)
+    solution_board = solve(random_board, 7, size)
 
     solution = solution_board[0]
 
