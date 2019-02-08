@@ -3,24 +3,6 @@ import time
 import math
 # import time to show speed of algorithm
 
-# this will need to be converted to a file reader
-# the assignment describes a text file with different n sizes
-
-
-def take_input():
-    """Accepts the size of the chess board"""
-    while True:
-        try:
-            size = int(input('What is the size of the chessboard? n = \n'))
-            if size == 1:
-                print("Trivial solution, choose a board size of at least 4")
-            if size <= 3:
-                print("Enter a value such that size>=4")
-                continue
-            return size
-        except ValueError:
-            print("Invalid value entered. Enter again")
-
 
 def vertical_conflict(board, col):
     return (any(point == col for point in board))
@@ -168,6 +150,8 @@ def perform_swap(i, j, play_board):
 
 def solve(size):
     collisions = -1
+    c1 = 0.45
+    c2 = 32
     while collisions != 0:
         board = place_queens(size)
         negative_diagonals = get_negative_diagonals(board)
@@ -177,10 +161,10 @@ def solve(size):
         attack = compute_attacks(negative_diagonals[1], positive_diagonals[1])
 
         number_of_attacks = len(attack)
-        limit = 0.5 * collisions
+        limit = c1 * collisions
 
         loop = 0
-        while loop < (32 * size):
+        while loop < (c2 * size):
             k = 0
             while k < number_of_attacks:
                 i = attack[k]
@@ -194,7 +178,7 @@ def solve(size):
                     if collisions == 0:
                         break
                     if collisions < limit:
-                        limit = 0.5 * collisions
+                        limit = c1 * collisions
                         attack = compute_attacks(
                             negative_diagonals[1], positive_diagonals[1])
                         number_of_attacks = len(attack)
@@ -203,16 +187,11 @@ def solve(size):
     return board
 
 
-# this currently prints the board visually to see all of the queens
-# the commented section in this function will print the 1D array
-# of the column location for each queen in a row
-
-
-# take user input for n queens
-size = take_input()
-print("****")
-
-start = time.time()
-solved = solve(size)
-print("solution in {}".format(time.time()-start))
-print(solved)
+queens_file = open("nqueens.txt")
+for n in queens_file:
+    start = time.time()
+    solution = solve(int(n))
+    print("n = {} -- Solution Found in: {}\n{}".format(n, time.time()-start, solution))
+    print("******")
+    print()
+queens_file.close()
