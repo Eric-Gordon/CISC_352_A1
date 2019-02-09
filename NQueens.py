@@ -187,11 +187,19 @@ def solve(size):
     return board
 
 
+solutions = []
 queens_file = open("nqueens.txt")
 for n in queens_file:
     start = time.time()
+    print("n = {}".format(int(n)))
     solution = solve(int(n))
-    print("n = {} -- Solution Found in: {}\n{}".format(n, time.time()-start, solution))
+    solutions.append(solution)
+    print("Solution Found in: {}\n{}".format(time.time()-start, solution))
     print("******")
     print()
 queens_file.close()
+
+solution_file = open("nqueens_out.txt", "w")
+for solution in solutions:
+    solution_file.write("{}\n".format(solution))
+solution_file.close()
