@@ -145,14 +145,16 @@ def compute_attacks(nd, pd):
 
 
 def swap_ok(i, j, nd, pd, play_board):
+    if i == j:
+        return False
     board = play_board[:]
     negative_diagonals = nd[:]
     positive_diagonals = pd[:]
     # setup old differences and sums
-    i_old_collisions = compute_collisions(list(d for d in negative_diagonals[0] if d[0] == (
-        i - board[i])), list(d for d in positive_diagonals[0] if d[0] == (i + board[i])))
+    i_old_collisions = compute_collisions(list(d for d in negative_diagonals if d[0] == (
+        i - board[i])), list(d for d in positive_diagonals if d[0] == (i + board[i])))
     j_old_collisions = compute_collisions(
-        list(d for d in negative_diagonals[0] if d[0] == (j - board[j])), list(d for d in positive_diagonals[0] if d[0] == (j + board[j])))
+        list(d for d in negative_diagonals if d[0] == (j - board[j])), list(d for d in positive_diagonals if d[0] == (j + board[j])))
     total_old = i_old_collisions + j_old_collisions
 
     # swap!
@@ -219,8 +221,9 @@ def solve(size):
             k = 0
             while k < number_of_attacks and collisions != 0:
                 i = attack[k]
+                # potentially make j use min conflict on row i
                 j = random.randint(0, size-1)
-                if swap_ok(i, j, negative_diagonals, positive_diagonals, board):
+                if swap_ok(i, j, negative_diagonals[0], positive_diagonals[0], board):
                     swap = perform_swap(i, j, board)
                     board = swap[0]
                     negative_diagonals = swap[1]
