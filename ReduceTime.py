@@ -6,51 +6,86 @@ import math
 
 def place_queens(size):
     # start = time.time()
+    c_range = 0
+    if size <= 1000:
+        c_range = 30
+    elif size <= 100000:
+        c_range = 40
+    else:
+        c_range = 80
 
-    # taken_negatives = []
-    taken_positives = []
+    taken_negatives = {}
+    taken_positives = {}
     free_cols = list(range(size))
     board = []
 
+    global no_collision_length
+    no_collision_length = 0
+
     for col in range(1, size, 2):
-        taken_positives.append(len(board) + col)
+        taken_negatives[(len(board) - col)] = 0
+        taken_positives[(len(board) + col)] = 0
         free_cols.remove(col)
         board.append(col)
-    for col in range(0, math.floor(len(board)/2), 2):
-        taken_positives.append(len(board) + col)
-        free_cols.remove(col)
-        board.append(col)
-    for row in range(math.floor(len(board)/4)):
-        col = random.choice(list(free_col for free_col in free_cols if (
-            (len(board) + free_col) not in taken_positives)))
-        free_cols.remove(col)
-        board.append(col)
+    for col in range(0, size, 2):
+        if (len(board) + col) not in taken_positives and (len(board) - col) not in taken_negatives:
+            taken_negatives[(len(board) - col)] = 0
+            taken_positives[(len(board) + col)] = 0
+            free_cols.remove(col)
+            board.append(col)
+        else:
+            break
+    while (len(board) < (size - c_range)):
+        col = random.choice(free_cols)
+        if (len(board) + col) not in taken_positives and (len(board) - col) not in taken_negatives:
+            taken_negatives[(len(board) - col)] = 0
+            taken_positives[(len(board) + col)] = 0
+            free_cols.remove(col)
+            board.append(col)
+        else:
+            i = random.randint(0, len(board) - 1)
+            free_cols.append(board[i])
+            board[i] = col
+            free_cols.remove(col)
+    no_collision_length = len(board)
+    print("board without conflicts: {}".format(no_collision_length))
     for row in range(len(board), size):
         col = random.choice(free_cols)
         free_cols.remove(col)
         board.append(col)
-
-    # for row in range(math.floor(size/2)):
-    #     col = random.choice(
-    #         list(free_col for free_col in range(size) if (free_col not in board) and ((row - free_col) not in taken_negatives) and ((row + free_col) not in taken_positives)))
-    #     taken_negatives.append(row-col)
-    #     taken_positives.append(row + col)
-    #     board.append(col)
-    # for row in range(len(board), size):
-    #     col = random.choice(
-    #         list(free_col for free_col in range(size) if free_col not in board))
-    #     board.append(col)
-
-    # board = list(random.sample(range(size), size))
-
-    # print("board created in: {:.10f}".format(time.time() - start))
     return board
 
 
 def get_diagonals(play_board, nds, pds):
     nd, pd, p_d_rows, n_d_rows = {}, {}, {}, {}
     # start = time.time()
-    for row in range(len(play_board)):
+    for row in range(no_collision_length, len(play_board)):
+        if(row - play_board[row]) in nds:
+            if (row - play_board[row]) not in n_d_rows:
+                n_d_rows[(row - play_board[row])] = [row]
+            else:
+                n_d_rows[(row - play_board[row])].append(row)
+            if (row - play_board[row]) not in nd:
+                nd[(row - play_board[row])] = 1
+            else:
+                nd[(row - play_board[row])] += 1
+        if(row + play_board[row]) in pds:
+            if (row + play_board[row]) not in p_d_rows:
+                p_d_rows[(row + play_board[row])] = [row]
+            else:
+                p_d_rows[(row + play_board[row])].append(row)
+            if (row + play_board[row]) not in pd:
+                pd[(row + play_board[row])] = 1
+            else:
+                pd[(row + play_board[row])] += 1
+    # print("diagonals calculated in: {:.10f}".format(time.time() - start))
+    return [{k: v for k, v in nd.items() if v > 1}, {k: v for k, v in pd.items() if v > 1}, n_d_rows, p_d_rows]
+
+
+def get_all_diagonals(play_board, nds, pds):
+    nd, pd, p_d_rows, n_d_rows = {}, {}, {}, {}
+    # start = time.time()
+    for row in range(no_collision_length, len(play_board)):
         if(row - play_board[row]) in nds:
             if (row - play_board[row]) not in n_d_rows:
                 n_d_rows[(row - play_board[row])] = [row]
@@ -116,7 +151,7 @@ def compute_attacks(nd, pd, n_rows, p_rows):
 
 def get_specific_negative_diagonal(play_board, diff):
     total = 0
-    for row in range(len(play_board)):
+    for row in range(no_collision_length, len(play_board)):
         if (row - play_board[row]) == diff:
             total += 1
     return (total - 1) if (total > 1) else 0
@@ -124,7 +159,7 @@ def get_specific_negative_diagonal(play_board, diff):
 
 def get_specific_positive_diagonal(play_board, summ):
     total = 0
-    for row in range(len(play_board)):
+    for row in range(no_collision_length, len(play_board)):
         if (row + play_board[row]) == summ:
             total += 1
     return (total - 1) if (total > 1) else 0
@@ -176,9 +211,10 @@ def compute_min_repair(play_board, row):
 
 def solve(size):
     collisions = -1
+    global difference, summation
     difference = list(range((size-2), ((size-1) * -1), -1))
     summation = list(range(1, ((size-1)+(size-1))))
-    c1 = 0.45
+    c1 = 0.6
     c2 = 32
 
     while collisions != 0:
@@ -193,15 +229,14 @@ def solve(size):
 
         loop = 0
         while loop < (c2 * size) and collisions != 0:
-            print("MAIN: loop: {} -- collisions: {} -- noa: {}".format(loop,
-                                                                       collisions, number_of_attacks))
+            # print("MAIN: loop: {} -- collisions: {} -- noa: {}".format(loop,collisions, number_of_attacks))
             k = 0
             while k < number_of_attacks and collisions != 0:
                 i = attack[k]
                 # potentially make j use min conflict on row i
                 # j = board.index(compute_min_repair(board, i))
                 # j = random.choice(attack) if len(attack) > (size / 10) else random.randint(0, size-1)
-                j = random.randint(0, size-1)
+                j = random.randint(no_collision_length, size-1)
                 # print("collisions: {}\ni: {}\nj: {}".format(collisions, i, j))
                 if swap_ok(i, j, board):
                     swap = perform_swap(i, j, difference, summation, board)
@@ -227,7 +262,10 @@ for n in queens_file:
     print("n = {}".format(int(n)))
     solution = solve(int(n))
     solutions.append(solution)
-    print("Solution Found in: {}\n".format(time.time()-start))
+    print("Solution Found in: {:.10f}\n".format(time.time()-start))
+    diagonals = get_all_diagonals(solution, difference, summation)
+    print("Double Check Collisions: {}".format(
+        compute_collisions(diagonals[0], diagonals[1])))
     print("******")
     print()
 queens_file.close()
