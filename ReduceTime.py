@@ -7,7 +7,7 @@ import math
 def place_queens(size):
     # start = time.time()
     c_range = 50
-
+    global taken_negatives, taken_positives
     taken_negatives = {}
     taken_positives = {}
     free_cols = list(range(size))
@@ -18,8 +18,8 @@ def place_queens(size):
         board_len = len(board)
         col = random.choice(free_cols)
         if (board_len + col) not in taken_positives and (board_len - col) not in taken_negatives:
-            taken_negatives[(board_len - col)] = board_len
-            taken_positives[(board_len + col)] = board_len
+            taken_negatives[(board_len - col)] = [board_len]
+            taken_positives[(board_len + col)] = [board_len]
             free_cols.remove(col)
             board.append(col)
     for row in range(len(board), size):
@@ -30,29 +30,29 @@ def place_queens(size):
 
 
 def get_diagonals(play_board, nds, pds):
-    nd, pd, p_d_rows, n_d_rows = {}, {}, {}, {}
+    nd, pd = {}, {}
     # start = time.time()
     for row in range(0, len(play_board)):
         if(row - play_board[row]) in nds:
-            if (row - play_board[row]) not in n_d_rows:
-                n_d_rows[(row - play_board[row])] = [row]
+            if (row - play_board[row]) not in taken_negatives:
+                taken_negatives[(row - play_board[row])] = [row]
             else:
-                n_d_rows[(row - play_board[row])].append(row)
+                taken_negatives[(row - play_board[row])].append(row)
             if (row - play_board[row]) not in nd:
                 nd[(row - play_board[row])] = 1
             else:
                 nd[(row - play_board[row])] += 1
         if(row + play_board[row]) in pds:
-            if (row + play_board[row]) not in p_d_rows:
-                p_d_rows[(row + play_board[row])] = [row]
+            if (row + play_board[row]) not in taken_positives:
+                taken_positives[(row + play_board[row])] = [row]
             else:
-                p_d_rows[(row + play_board[row])].append(row)
+                taken_positives[(row + play_board[row])].append(row)
             if (row + play_board[row]) not in pd:
                 pd[(row + play_board[row])] = 1
             else:
                 pd[(row + play_board[row])] += 1
     # print("diagonals calculated in: {:.10f}".format(time.time() - start))
-    return [{k: v for k, v in nd.items() if v > 1}, {k: v for k, v in pd.items() if v > 1}, n_d_rows, p_d_rows]
+    return [{k: v for k, v in nd.items() if v > 1}, {k: v for k, v in pd.items() if v > 1}]
 
 
 def compute_collisions(nd, pd):
@@ -67,14 +67,14 @@ def compute_collisions(nd, pd):
     return total
 
 
-def compute_attacks(nd, pd, n_rows, p_rows):
+def compute_attacks(nd, pd):
     under_attack = []
     for diagonal in nd:
-        for row in n_rows[diagonal]:
+        for row in taken_negatives[diagonal]:
             if row not in under_attack:
                 under_attack.append(row)
     for diagonal in pd:
-        for row in p_rows[diagonal]:
+        for row in taken_positives[diagonal]:
             if row not in under_attack:
                 under_attack.append(row)
     return under_attack
@@ -129,17 +129,6 @@ def perform_swap(i, j, nds, pds, play_board):
     return [board, diagonals]
 
 
-def compute_min_repair(play_board, row):
-    cols = []
-    for col in range(len(play_board)):
-        col_old = get_specific_negative_diagonal(play_board, (row - col)) + get_specific_positive_diagonal(
-            play_board, (row + col)) + (1 if col in play_board else 0)
-        cols.append(col_old)
-    min_col = random.choice(list(conflict for conflict in range(
-        len(cols)) if cols[conflict] == min(cols)))
-    return min_col
-
-
 def solve(size):
     collisions = -1
     global difference, summation
@@ -152,8 +141,7 @@ def solve(size):
         board = place_queens(size)
         diagonals = get_diagonals(board, difference, summation)
         collisions = compute_collisions(diagonals[0], diagonals[1])
-        attack = compute_attacks(
-            diagonals[0], diagonals[1], diagonals[2], diagonals[3])
+        attack = compute_attacks(diagonals[0], diagonals[1])
         number_of_attacks = len(attack)
 
         limit = c1 * collisions
@@ -177,8 +165,7 @@ def solve(size):
                         break
                     if collisions < limit:
                         limit = c1 * collisions
-                        attack = compute_attacks(
-                            swap[1][0], swap[1][1], swap[1][2], swap[1][3])
+                        attack = compute_attacks(swap[1][0], swap[1][1])
                         number_of_attacks = len(attack)
 
                 k += 1
