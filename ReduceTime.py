@@ -5,8 +5,9 @@ import math
 
 
 def place_queens(size):
-    # start = time.time()
+    # max collisions allowed on generation
     c_range = 50
+    # initialize
     global taken_negatives, taken_positives
     taken_negatives = {}
     taken_positives = {}
@@ -31,7 +32,6 @@ def place_queens(size):
 
 def get_diagonals(play_board, nds, pds):
     nd, pd = {}, {}
-    # start = time.time()
     for row in range(0, len(play_board)):
         if(row - play_board[row]) in nds:
             if (row - play_board[row]) not in taken_negatives:
@@ -51,19 +51,16 @@ def get_diagonals(play_board, nds, pds):
                 pd[(row + play_board[row])] = 1
             else:
                 pd[(row + play_board[row])] += 1
-    # print("diagonals calculated in: {:.10f}".format(time.time() - start))
     return [{k: v for k, v in nd.items() if v > 1}, {k: v for k, v in pd.items() if v > 1}]
 
 
 def compute_collisions(nd, pd):
     total = 0
-    # start = time.time()
     for diagonal in nd:
         total += (nd[diagonal] - 1)
 
     for diagonal in pd:
         total += (pd[diagonal] - 1)
-    # print("collisions totaled in: {:.10f}".format(time.time() - start))
     return total
 
 
@@ -116,7 +113,6 @@ def swap_ok(i, j, play_board):
         board, (j - board[j])) + get_specific_positive_diagonal(board, (j + board[j]))
     total_new = i_new + j_new
     if total_new < total_old:
-        # print("old_cols: {} -- new_cols: {}".format(total_old, total_new))
         return True
     else:
         return False
@@ -125,6 +121,7 @@ def swap_ok(i, j, play_board):
 def perform_swap(i, j, nds, pds, play_board):
     board = play_board[:]
     board[i], board[j] = board[j], board[i]
+    taken_negatives, taken_positives = {}, {}
     diagonals = get_diagonals(board, nds, pds)
     return [board, diagonals]
 
