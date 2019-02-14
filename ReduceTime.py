@@ -6,13 +6,7 @@ import math
 
 def place_queens(size):
     # start = time.time()
-    c_range = 0
-    if size <= 1000:
-        c_range = 30
-    elif size <= 100000:
-        c_range = 40
-    else:
-        c_range = 80
+    c_range = 100
 
     taken_negatives = {}
     taken_positives = {}
@@ -22,33 +16,31 @@ def place_queens(size):
     global no_collision_length
     no_collision_length = 0
 
-    for col in range(1, size, 2):
-        taken_negatives[(len(board) - col)] = 0
-        taken_positives[(len(board) + col)] = 0
-        free_cols.remove(col)
-        board.append(col)
-    for col in range(0, size, 2):
-        if (len(board) + col) not in taken_positives and (len(board) - col) not in taken_negatives:
-            taken_negatives[(len(board) - col)] = 0
-            taken_positives[(len(board) + col)] = 0
-            free_cols.remove(col)
-            board.append(col)
-        else:
-            break
-    while (len(board) < (size - c_range)):
+    # for col in range(1, size, 2):
+    #     taken_negatives[(len(board) - col)] = 0
+    #     taken_positives[(len(board) + col)] = 0
+    #     free_cols.remove(col)
+    #     board.append(col)
+    # for col in range(0, size, 2):
+    #     if (len(board) + col) not in taken_positives and (len(board) - col) not in taken_negatives:
+    #         taken_negatives[(len(board) - col)] = 0
+    #         taken_positives[(len(board) + col)] = 0
+    #         free_cols.remove(col)
+    #         board.append(col)
+    #     else:
+    #         break
+    board_len = 0
+    while (board_len < (size - c_range)):
+        board_len = len(board)
         col = random.choice(free_cols)
-        if (len(board) + col) not in taken_positives and (len(board) - col) not in taken_negatives:
-            taken_negatives[(len(board) - col)] = 0
-            taken_positives[(len(board) + col)] = 0
+        if (board_len + col) not in taken_positives and (board_len - col) not in taken_negatives:
+            taken_negatives[(board_len - col)] = board_len
+            taken_positives[(board_len + col)] = board_len
             free_cols.remove(col)
             board.append(col)
-        else:
-            i = random.randint(0, len(board) - 1)
-            free_cols.append(board[i])
-            board[i] = col
-            free_cols.remove(col)
+
     no_collision_length = len(board)
-    print("board without conflicts: {}".format(no_collision_length))
+    # print("board without conflicts: {}".format(no_collision_length))
     for row in range(len(board), size):
         col = random.choice(free_cols)
         free_cols.remove(col)
@@ -264,8 +256,6 @@ for n in queens_file:
     solutions.append(solution)
     print("Solution Found in: {:.10f}\n".format(time.time()-start))
     diagonals = get_all_diagonals(solution, difference, summation)
-    print("Double Check Collisions: {}".format(
-        compute_collisions(diagonals[0], diagonals[1])))
     print("******")
     print()
 queens_file.close()
