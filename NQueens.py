@@ -1,7 +1,11 @@
 import random
-import time
 import math
-# import time to show speed of algorithm
+
+""" 
+This function randomly places n number of queens on the board. It first
+places n - c_range queens without collisions before randomly placing the
+remaining queens in free columns.
+"""
 
 
 def place_queens(size):
@@ -24,6 +28,7 @@ def place_queens(size):
     free_cols = list(range(size))
     board = []
 
+    # n - c_range queens
     board_len = 0
     while (board_len < (size - c_range)):
         board_len = len(board)
@@ -35,11 +40,25 @@ def place_queens(size):
                 taken_positives[(board_len + col)] = [board_len]
             free_cols.remove(col)
             board.append(col)
+    # remaining queens
     for row in range(len(board), size):
         col = random.choice(free_cols)
         free_cols.remove(col)
         board.append(col)
     return board
+
+
+"""
+The compute collisions function creates two dicts, one for
+the positive diagonals and one for the negative diagonals.
+These dicts contain the different diagonal values along with
+a list of the rows where queens are in that particular diagonal.
+Such that the negative diagonal value -1 might have queens in row
+1 and 2. So the dict would look like {-1: [1,2]}.
+The function then calculates the collisions based on the number of
+queens that are in each diagonal, minus one. This is because 2 queens
+in a diagonal would only be 1 collision.
+"""
 
 
 def compute_collisions(board):
@@ -77,6 +96,12 @@ def compute_attacks(nd, pd):
     return under_attack
 
 
+"""
+This function is used to find the collisions are a particular negative
+diagonal.
+"""
+
+
 def get_specific_negative_diagonal(play_board, diff):
     total, n = 0, len(play_board)
     for row in range(0, n):
@@ -85,12 +110,25 @@ def get_specific_negative_diagonal(play_board, diff):
     return (total - 1) if (total > 1) else 0
 
 
+"""
+This function is used to find the collisions are a particular positive
+diagonal.
+"""
+
+
 def get_specific_positive_diagonal(play_board, summ):
     total, n = 0, len(play_board)
     for row in range(0, n):
         if (row + play_board[row]) == summ:
             total += 1
     return (total - 1) if (total > 1) else 0
+
+
+"""
+This function uses the get_specific_diagonals functions to evaluate
+two rows collisions before and after a swap to determine if the swap
+would decrease the amount of collisions on the board.
+"""
 
 
 def swap_ok(i, j, play_board):
@@ -117,6 +155,11 @@ def swap_ok(i, j, play_board):
         return True
     else:
         return False
+
+
+"""
+This is the main function to solve the board for a certain size n.
+"""
 
 
 def solve(size):
@@ -154,6 +197,9 @@ def solve(size):
     return board
 
 
+"""
+Here the program reads the input file and writes the solutions to an output file.
+"""
 solutions = []
 queens_file = open("nqueens.txt")
 for n in queens_file:
